@@ -1,0 +1,274 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ==================== ENUMS ====================
+
+enum Grade {
+  全新
+  几乎全新
+  良好
+  一般
+  有瑕疵
+}
+
+enum ProductStatus {
+  ACTIVE
+  SOLD
+  RESERVED
+  CANCELLED
+}
+
+enum TransactionStatus {
+  PENDING_PAYMENT
+  PAID
+  SHIPPED
+  RECEIVED
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+enum UserRole {
+  BUYER
+  SELLER
+  ADMIN
+}
+
+// ==================== MODELS ====================
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  studentId    String?
+  passwordHash String
+  phone        String
+  avatar       String?
+  creditScore  Int      @default(100)
+  role         UserRole @default(BUYER)
+  bio          String?
+  campus       String?
+  location     String?
+  birthday     DateTime?
+  studentIdVerified Boolean @default(false)
+  isVerified   Boolean  @default(false)
+  isFirstTimeSetup    Boolean @default(true)
+  disclaimerAccepted  Boolean @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  products         Product[]       @relation("Seller")
+  favorites        Favorite[]
+  sentMessages     Message[]       @relation("SentMessages")
+  receivedMessages Message[]       @relation("ReceivedMessages")
+  purchases        Transaction[]   @relation("Buyer")
+  sales            Transaction[]   @relation("Seller")
+  reviewsGiven     Review[]        @relation("Reviewer")
+  blocksPlaced     BlockedUser[]   @relation("Blocker")
+  blocksReceived   BlockedUser[]   @relation("Blocked")
+  reports          Report[]
+}
+
+model VerificationCode {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model ProductCategory {
+  id          Int      @id @default(autoincrement())
+  name        String
+  displayName String
+  description String?
+  icon        String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  products Product[]
+}
+
+model Product {
+  id                String        @id @default(cuid())
+  title             String
+  description       String?
+  categoryId        Int
+  userId            String
+  price             Float
+  originalPrice     Float?
+  grade             Grade
+  brand             String?
+  isShippingIncluded Boolean      @default(false)
+  shippingLocation  String?
+  sellerType        String?
+  isVerified        Boolean       @default(false)
+  status            ProductStatus @default(ACTIVE)
+  viewCount         Int           @default(0)
+  favoriteCount     Int           @default(0)
+  searchText        String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  category     ProductCategory   @relation(fields: [categoryId], references: [id])
+  user         User              @relation("Seller", fields: [userId], references: [id])
+  images       ProductImage[]
+  accessories  ProductAccessory[]
+  flaws        ProductFlaw[]
+  transactions Transaction[]
+  favorites    Favorite[]
+  messages     Message[]
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  url       String
+  sortOrder Int     @default(0)
+  type      String  @default("image")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model AccessoryItem {
+  id         Int               @id @default(autoincrement())
+  name       String
+  isRequired Boolean           @default(true)
+  sortOrder  Int               @default(0)
+
+  products ProductAccessory[]
+}
+
+model ProductAccessory {
+  id          String  @id @default(cuid())
+  productId   String
+  accessoryId Int
+  isIncluded  Boolean @default(true)
+  description String?
+
+  product   Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  accessory AccessoryItem @relation(fields: [accessoryId], references: [id])
+
+  @@unique([productId, accessoryId])
+}
+
+model ProductFlaw {
+  id          String  @id @default(cuid())
+  productId   String
+  description String
+  severity    String  @default("minor")
+  imageUrl    String?
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Transaction {
+  id                 String            @id @default(cuid())
+  productId          String
+  buyerId            String
+  sellerId           String
+  price              Float
+  status             TransactionStatus @default(PENDING_PAYMENT)
+  escrowStatus       String?
+  verificationStatus String?
+  buyerMessage       String?
+  completedAt        DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  product Product  @relation(fields: [productId], references: [id])
+  buyer   User     @relation("Buyer", fields: [buyerId], references: [id])
+  seller  User     @relation("Seller", fields: [sellerId], references: [id])
+  review  Review?
+}
+
+model Review {
+  id            String   @id @default(cuid())
+  transactionId String   @unique
+  reviewerId    String
+  rating        Int
+  content       String?
+  createdAt     DateTime @default(now())
+
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+  reviewer    User        @relation("Reviewer", fields: [reviewerId], references: [id])
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  productId  String?
+  content    String
+  imageUrl   String?
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  sender   User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  product  Product? @relation(fields: [productId], references: [id])
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
+}
+
+model BlockedUser {
+  id        String   @id @default(cuid())
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+
+  blocker User @relation("Blocker", fields: [blockerId], references: [id])
+  blocked User @relation("Blocked", fields: [blockedId], references: [id])
+
+  @@unique([blockerId, blockedId])
+}
+
+model Report {
+  id          String   @id @default(cuid())
+  reporterId  String
+  productId   String?
+  reason      String
+  description String?
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+  resolvedAt  DateTime?
+
+  reporter User @relation(fields: [reporterId], references: [id])
+}
+
+model HistoricalPrice {
+  id               String   @id @default(cuid())
+  productId        String?
+  title            String
+  brand            String?
+  grade            Grade
+  transactionPrice Float
+  transactionDate  DateTime
+  createdAt        DateTime @default(now())
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  pinned    Boolean  @default(false)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
