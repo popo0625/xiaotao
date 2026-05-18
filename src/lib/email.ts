@@ -1,10 +1,21 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || "smtpdm.aliyun.com",
+  port: Number(process.env.SMTP_PORT) || 465,
+  secure: process.env.SMTP_SECURE !== "false",
+  auth: {
+    user: process.env.SMTP_USER || "",
+    pass: process.env.SMTP_PASS || "",
+  },
+});
 
 export async function sendVerificationCode(email: string, code: string): Promise<void> {
-  await resend.emails.send({
-    from: "校淘 <onboarding@resend.dev>",
+  const fromName = process.env.SMTP_FROM_NAME || "校淘";
+  const fromAddr = process.env.SMTP_FROM || process.env.SMTP_USER || "noreply@xiaotao.com";
+
+  await transporter.sendMail({
+    from: `"${fromName}" <${fromAddr}>`,
     to: email,
     subject: "校淘验证码",
     html: `
