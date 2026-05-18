@@ -1,9 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
-import { join } from "path";
 
-const dbPath = join(process.cwd(), "prisma", "dev.db");
-const adapter = new PrismaLibSql({ url: `file:${dbPath}` });
+const url = process.env.DATABASE_URL || `file:${process.cwd()}/prisma/dev.db`;
+const adapter = new PrismaLibSql({ url, authToken: process.env.DATABASE_AUTH_TOKEN });
 const prisma = new PrismaClient({ adapter });
 
 const CATEGORIES = [
