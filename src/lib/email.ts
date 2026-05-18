@@ -1,18 +1,10 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.qq.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendVerificationCode(email: string, code: string): Promise<void> {
-  await transporter.sendMail({
-    from: `"校淘" <${process.env.SMTP_USER}>`,
+  await resend.emails.send({
+    from: "校淘 <onboarding@resend.dev>",
     to: email,
     subject: "校淘验证码",
     html: `
