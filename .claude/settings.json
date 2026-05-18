@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(cmd.exe /c \"taskkill /F /IM node.exe\")",
+      "Bash(cmd.exe /c \"taskkill /F /PID 1962\")",
+      "Bash(cmd.exe /c \"handle.exe -accepteula -a \\\\\"dev.db\\\\\"\")",
+      "Bash(cmd.exe /c \"tasklist /FI \\\\\"PID eq 1962\\\\\"\")",
+      "Bash(powershell.exe -Command \"Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep 2; Remove-Item 'C:\\\\Users\\\\chen\\\\Desktop\\\\llm-aply\\\\Project\\\\demo\\\\prisma\\\\dev.db' -Force -ErrorAction SilentlyContinue; if\\(Test-Path 'C:\\\\Users\\\\chen\\\\Desktop\\\\llm-aply\\\\Project\\\\demo\\\\prisma\\\\dev.db'\\){echo 'still exists'}else{echo 'deleted'}\")",
+      "WebFetch(domain:localhost)",
+      "Bash(curl -s http://localhost:3000/api/categories)",
+      "Bash(curl -s http://localhost:3000/api/accessory-items)",
+      "Bash(curl -s http://localhost:3000/)"
+    ]
+  }
+}
