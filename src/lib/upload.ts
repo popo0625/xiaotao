@@ -15,7 +15,8 @@ export async function uploadFile(file: File, type: "product" | "avatar" = "produ
   }
 
   const subDir = type === "avatar" ? "avatars" : "products";
-  const uploadDir = join(process.cwd(), "public", "uploads", subDir);
+  const baseDir = process.env.UPLOAD_DIR || join(process.cwd(), "public");
+  const uploadDir = join(baseDir, "uploads", subDir);
   await mkdir(uploadDir, { recursive: true });
 
   const ext = file.name.split(".").pop() || "jpg";
@@ -26,5 +27,8 @@ export async function uploadFile(file: File, type: "product" | "avatar" = "produ
   const buffer = Buffer.from(bytes);
   await writeFile(filepath, buffer);
 
+  if (process.env.UPLOAD_DIR) {
+    return `/api/uploads/${subDir}/${filename}`;
+  }
   return `/uploads/${subDir}/${filename}`;
 }

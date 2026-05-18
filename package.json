@@ -5,8 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "start": "npx prisma generate && npx prisma db push && next start",
+    "lint": "eslint",
+    "postinstall": "npx prisma generate"
   },
   "dependencies": {
     "@libsql/client": "^0.17.3",
