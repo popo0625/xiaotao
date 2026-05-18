@@ -25,7 +25,8 @@ export async function POST(request: Request) {
     }
 
     const subDir = uploadType === "avatar" ? "avatars" : uploadType === "chat" ? "chat" : "products";
-    const uploadDir = join(process.cwd(), "public", "uploads", subDir);
+    const baseDir = process.env.UPLOAD_DIR || join(process.cwd(), "public");
+    const uploadDir = join(baseDir, "uploads", subDir);
     await mkdir(uploadDir, { recursive: true });
 
     const ext = file.name.split(".").pop() || "jpg";
